@@ -4,14 +4,16 @@
 ###
 ###
 
-from machine import Pin,PWM,UART #importing PIN and PWM
-import time #importing time
+from machine import Pin,PWM,UART 
+import time 
 
-#Defining UART channel and Baud Rate
+#Define UART channel and Baud Rate
 uart= UART(0,9600)
 
+onboard_led = Pin(25, Pin.OUT) # This shows the board is powered on!
+
 #OUT1  and OUT2
-In1=Pin(6,Pin.OUT)  #IN1`
+In1=Pin(6,Pin.OUT)  #IN1
 In2=Pin(7,Pin.OUT)  #IN2
 
 
@@ -66,6 +68,7 @@ def stop():
     In4.low()
 
 while True:
+    onboard_led.low()
     if uart.any(): #Checking if data available
         data=uart.read() #Getting data
         data=str(data) #Converting bytes to str type
