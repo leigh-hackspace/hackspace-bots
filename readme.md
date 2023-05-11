@@ -1,7 +1,6 @@
 # Hackspace-Bots
 
-Below is the information for the build of the Hackspace-Bots proje
-ct
+Below is the information for the build of the Hackspace-Bots project
 
 ---
 
