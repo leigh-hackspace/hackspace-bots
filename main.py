@@ -1,18 +1,86 @@
-###
-### https://play.google.com/store/apps/details?id=de.kai_morich.serial_bluetooth_terminal&hl=en_IN&gl=US 
-### this app will allow you to define stuff to send over bluetooth
-###
-###
-
+import socket
+import network
+import machine
+from secrets import secrets
 from machine import Pin,PWM,UART 
 import time 
 
-#Define UART channel and Baud Rate
-uart= UART(0,9600)
+ssid = secrets['ssid']
+password = secrets['pw']
 
-onboard_led = Pin(25, Pin.OUT) # This shows the board is powered on!
+led = machine.Pin("LED",Pin.OUT)
 
-#OUT1  and OUT2
+ap = network.WLAN(network.AP_IF)
+ap.config(essid=ssid, password=password)
+ap.active(True)
+
+while ap.active() == False:
+  pass
+
+print('Connection successful')
+print(ap.ifconfig())
+
+html = f"""<!DOCTYPE html>
+<html>
+    <head> 
+		<title>Hackspace Bot</title> 
+		<style>
+		<!-- not sure if we can do inline style sheets on account of needing curly braces -->>
+		</style>
+	</head>
+    <body>
+		<div>
+			<form action="" method="post">
+			<table class="controller">
+			<tr>
+				<td></td>
+				<td>
+					<button type="submit" formaction="forwards" style="width:175px; height:100px; background-color:#0000ff; color:#ffffff; font-size:25pt">&#8593</button>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><button type="submit" formaction="left" style="width:175px; height:100px; background-color:#0000ff; color:#ffffff; font-size:25pt">&#8592</button></td>
+				<td>
+					<button type="submit" formaction="stop" style="width:175px; height:100px; background-color:#0000ff; color:#ffffff; font-size:25pt">Stop</button>
+				</td>
+				<td>
+					<button type="submit" formaction="right" style="width:175px; height:100px; background-color:#0000ff; color:#ffffff; font-size:25pt">&#8594</button>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<button type="submit" formaction="backwards"style="width:175px; height:100px; background-color:#0000ff; color:#ffffff; font-size:25pt">&#8595</button>
+				</td>
+				<td></td>
+			</tr>
+			</table>
+		</div>
+		<div>
+		<table>
+			<tr>
+				<td>SSID</td>
+				<td>PASSWORD</td>
+				<td>IP</td>
+			</tr>
+			<tr>
+				<td>{ssid}</td>
+				<td>{password}</td>
+				<td>{ap.ifconfig()}</td>
+			</tr>
+		</table>
+		</div>
+        </form>
+    </body>
+</html>
+"""
+
+addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+s = socket.socket()
+s.bind(addr)
+s.listen(1)
+
 In1=Pin(6,Pin.OUT)  #IN1
 In2=Pin(7,Pin.OUT)  #IN2
 
@@ -34,6 +102,7 @@ EN_B.duty_u16(65025)
 
 # Left
 def turn_left():
+    print("Left I go")
     In1.high()
     In2.low()
     In3.low()
@@ -41,6 +110,7 @@ def turn_left():
     
 # Right
 def turn_right():
+    print("Right I go")
     In1.low()
     In2.high()
     In3.high()
@@ -48,6 +118,7 @@ def turn_right():
     
 # Backward
 def move_backward():
+    print("Back up Back up")
     In1.low()
     In2.high()
     In3.low()
@@ -55,6 +126,7 @@ def move_backward():
     
 # Forward
 def move_forward():
+    print("Onwards!")
     In1.high()
     In2.low()
     In3.high()
@@ -62,37 +134,43 @@ def move_forward():
     
 # Stop
 def stop():
+    print("All Stop")
     In1.low()
     In2.low()
     In3.low()
     In4.low()
 
+
+print('listening on', addr)
+
+# Listen for connections
 while True:
-    onboard_led.low()
-    if uart.any(): #Checking if data available
-        data=uart.read() #Getting data
-        data=str(data) #Converting bytes to str type
-        print(data)
-        if('forward' in data):
-            print('forwards I go')
-            move_forward() #Forward
-        elif('backward' in data):
-            move_backward() #Backward
-            print('backwards I go')
-        elif('right' in data):
-            print('right I go')
-            turn_right() #Turn Right
-        elif('left' in data):
-            print('left I go')
-            turn_left() #Turn Left
-        elif('stop' in data):
-            print("I'm stopping")
-            stop() #Stop
-        elif('E' in data):
-            speed=data.split("|")
-            print(speed[1])
-            set_speed = float(speed[1])/100 * 65025
-            EN_A.duty_u16(int(set_speed)) #Setting Duty Cycle
-            EN_B.duty_u16(int(set_speed)) #Setting Duty Cycle
-        else:
-            stop() #Stop
+    led.toggle()
+    try:
+        cl, addr = s.accept()
+        print('client connected from', addr)
+        request = cl.recv(1024)
+        data = str(request)
+        direction = (data[1:20].split(' ')[1].replace('/',''))
+        
+        if(direction =='forwards'):
+            move_forward()
+        elif(direction == 'left'):
+            turn_left()
+        elif(direction == 'right'):
+            turn_right()
+        elif(direction == 'backwards'):
+            move_backward()
+        elif(direction == 'stop'):
+            stop()
+            
+        cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
+        cl.send(html)
+        cl.close()
+
+
+    except OSError as e:
+        cl.close()
+        s.close()
+        print('connection closed')
+
