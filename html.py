@@ -1,16 +1,10 @@
-def generateHTML(ssid, password, ap):
-    html = """<!DOCTYPE html>
+def generateHTML(ssid, password, ap, style):
+    html = f"""<!DOCTYPE html>
     <html>
         <head> 
             <title>Hackspace Bot</title> 
             <style>
-            button {
-                width:175px;
-                height:100px;
-                background-color:#0000ff;
-                color:#ffffff;
-                font-size:25pt
-            }
+                {style}
             </style>
         </head>
         <body>

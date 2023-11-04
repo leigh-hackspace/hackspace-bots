@@ -3,17 +3,27 @@ import network
 import machine
 from secrets import secrets
 from machine import Pin,PWM,UART,WDT
-import time 
+import time
+import html
 
 ssid = secrets['ssid']
 password = secrets['pw']
+host_address = secrets['host_address']
+gateway = secrets['gateway']
+
+style = ""
+with open("style.css","r") as f:
+    style=f.read()
+    
+print(style)
 
 led = machine.Pin("LED",Pin.OUT)
 
 ap = network.WLAN(network.AP_IF)
 ap.config(essid=ssid, password=password)
+
 ap.active(True)
-#wdt = WDT(timeout=8000)
+
 
 while ap.active() == False:
   pass
@@ -21,71 +31,6 @@ while ap.active() == False:
 print('Connection successful')
 print(ap.ifconfig()) 
 
-def generateHTML():
-    html = """<!DOCTYPE html>
-    <html>
-        <head> 
-            <title>Hackspace Bot</title> 
-            <style>
-            button {
-                width:175px;
-                height:100px;
-                background-color:#0000ff;
-                color:#ffffff;
-                font-size:25pt
-            }
-            </style>
-        </head>
-        <body>
-            <div>
-                <form action="" method="post">
-                <table class="controller">
-                <tr>
-                    <td></td>
-                    <td>
-                        <button type="submit" formaction="forwards">&#8593</button>
-                    </td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td><button type="submit" formaction="left">&#8592</button></td>
-                    <td>
-                        <button type="submit" formaction="stop">Stop</button>
-                    </td>
-                    <td>
-                        <button type="submit" formaction="right">&#8594</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <button type="submit" formaction="backwards" >&#8595</button>
-                    </td>
-                    <td></td>
-                </tr>
-                </table>
-            </div>
-            """
-    html = html + f"""
-            <div>
-            <table>
-                <tr>
-                    <td>SSID</td>
-                    <td>PASSWORD</td>
-                    <td>IP</td>
-                </tr>
-                <tr>
-                    <td>{ssid}</td>
-                    <td>{password}</td>
-                    <td>{ap.ifconfig()}</td>
-                </tr>
-            </table>
-            </div>
-            </form>
-    </body>
-        </html>
-    """
-    return html
 
 addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
 s = socket.socket()
@@ -184,7 +129,9 @@ while True:
             
         cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
         time.sleep(0.2)
-        cl.send(generateHTML())
+        cl.send(
+            html.generateHTML(ssid, password, ap, style)
+            )
         cl.close()
 
 
