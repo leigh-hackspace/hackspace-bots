@@ -1,7 +1,17 @@
+:root{
+
+    --color-primary-0 :  #679933 ;
+    --color-primary-1 :  #C0E699 ;
+    --color-primary-2 :  #90BF60 ;
+    --color-primary-3 :  #437313 ;
+    --color-primary-4 :  #274D00 ;
+    --color-white     :  #ffffff ;
+    --color-black     :  #000000 ;
+}
 button {
     width:175px;
     height:100px;
-    background-color:#000000;
-    color:#ffffff;
+    background-color: var(--color-primary-0);
+    color: var(--color-white);
     font-size:25pt
 }

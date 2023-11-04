@@ -39,3 +39,6 @@ During this project we aim to produce a step-by-step guide to building your very
 
 ** Join the Hackspace-Bots project and dive into the exciting world of robotics within a collaborative and innovative community! **
 
+
+## Decorating Your Bot:
+To pick your colours, you can use a [colour wheel]{https://paletton.com)
